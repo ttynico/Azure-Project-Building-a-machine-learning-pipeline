@@ -1,0 +1,11 @@
+name: network-anomaly-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - pandas==2.2.2
+      - scikit-learn==1.5.1
+      - mlflow==2.15.1
+      - azureml-mlflow==1.57.0

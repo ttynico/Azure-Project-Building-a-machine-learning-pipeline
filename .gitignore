@@ -1,0 +1,22 @@
+# Data (download separately, see README)
+data/KDDTrain+.txt
+data/KDDTest+.txt
+data/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Azure ML local artifacts
+.azureml/
+outputs/
+mlruns/
+
+# Secrets / config
+.env
+config.json
+
+# OS
+.DS_Store
