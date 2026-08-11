@@ -130,3 +130,28 @@ bash setup/cleanup.sh
 - Reusable, independently versionable pipeline steps
 - Applied to a security-relevant dataset (network intrusion detection) rather than a
   generic tutorial dataset
+
+## Troubleshooting notes (from actually building this)
+
+
+**`az ml` CLI extension fails to install with `Cannot import 'maturin'`**
+On some Windows Python setups, the Azure CLI's bundled Python (especially newer/32-bit
+builds) has no prebuilt wheel available for one of the `ml` extension's dependencies,
+and falls back to a source build that needs the Rust tool `maturin`, which isn't present.
+Workaround used here: skip the `az ml` extension entirely and use the `azure-ai-ml`
+Python SDK directly (see `setup/create_workspace.py` and `setup/register_dataset.py`)
+for everything the extension would normally do — workspace creation, compute creation,
+and data asset registration.
+
+**`ModuleNotFoundError: No module named 'pkg_resources'` in the `train` step**
+`mlflow` (via `mlflow.utils.requirements_utils`) imports `pkg_resources`, which comes
+from `setuptools`, not the Python standard library. The base curated image didn't
+guarantee a `setuptools` install, so `mlflow` failed on import inside the Azure ML
+compute container. Simply adding `setuptools` to `environment/conda.yaml` wasn't
+enough — an unpinned install resolved to a version that has since dropped
+`pkg_resources`. Fix: pin `setuptools<81` explicitly.
+
+**Lesson**: environment issues that only show up *inside the remote compute container*
+(not locally) are a recurring Azure ML pain point — the fastest way to debug them is
+Studio → Jobs → [failed run] → [failed step] → Outputs + logs → `user_logs/std_log.txt`,
+which has the real Python traceback that the CLI's `jobs.stream()` output doesn't show.
