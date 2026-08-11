@@ -17,7 +17,7 @@ from azure.ai.ml.constants import AssetTypes
 from azure.identity import DefaultAzureCredential
 
 # ---- Config -----------------------------------------------------------
-SUBSCRIPTION_ID = os.environ.get("AZURE_SUBSCRIPTION_ID", "<your-subscription-id>")
+SUBSCRIPTION_ID = os.environ.get("AZURE_SUBSCRIPTION_ID", "bcf47805-ae92-4706-8cf2-13bdb2fe29ba")
 RESOURCE_GROUP = os.environ.get("AZURE_RESOURCE_GROUP", "rg-ml-network-anomaly")
 WORKSPACE_NAME = os.environ.get("AZURE_ML_WORKSPACE", "mlw-network-anomaly")
 COMPUTE_TARGET = "cpu-cluster"
