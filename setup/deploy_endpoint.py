@@ -55,8 +55,8 @@ def main():
 
     env = Environment(
         name="network-anomaly-inference-env",
-        conda_file="environment/conda.yaml",
-        image="mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04",
+        conda_file="environment/conda-inference.yaml",
+        image="mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest",
     )
 
     print(f"Creating deployment: {DEPLOYMENT_NAME} on {INSTANCE_TYPE}")

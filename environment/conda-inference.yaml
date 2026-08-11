@@ -1,0 +1,11 @@
+name: network-anomaly-inference-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - scikit-learn==1.5.1
+      - pandas==2.2.2
+      - joblib==1.4.2
+      - azureml-inference-server-http
