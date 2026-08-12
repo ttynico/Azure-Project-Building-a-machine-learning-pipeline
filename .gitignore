@@ -20,3 +20,9 @@ config.json
 
 # OS
 .DS_Store
+
+# One-off debugging scripts (not part of the reusable project)
+delete_failed_endpoint.py
+fix_model_registration.py
+get_deploy_logs.py
+sample_request.json
