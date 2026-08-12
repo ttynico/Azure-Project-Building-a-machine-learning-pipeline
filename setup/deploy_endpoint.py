@@ -28,7 +28,7 @@ RESOURCE_GROUP = os.environ.get("AZURE_RESOURCE_GROUP", "rg-ml-network-anomaly")
 WORKSPACE_NAME = os.environ.get("AZURE_ML_WORKSPACE", "mlw-network-anomaly")
 
 MODEL_NAME = "network-anomaly-detector"
-MODEL_VERSION = "1"
+MODEL_VERSION = "2"
 ENDPOINT_NAME = f"network-anomaly-ep-{str(uuid.uuid4())[:8]}"
 DEPLOYMENT_NAME = "blue"
 INSTANCE_TYPE = "Standard_DS2_v2"

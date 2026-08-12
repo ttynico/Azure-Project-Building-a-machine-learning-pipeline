@@ -143,7 +143,7 @@ def main():
     if metrics["accuracy"] >= ACCURACY_THRESHOLD:
         print(f"Accuracy {metrics['accuracy']:.4f} >= {ACCURACY_THRESHOLD} — registering model")
         model = Model(
-            path=f"azureml://jobs/{submitted_job.name}/outputs/trained_model/model.pkl",
+            path=f"azureml://jobs/{submitted_job.name}/outputs/trained_model",
             name="network-anomaly-detector",
             description="RandomForest classifier for NSL-KDD network intrusion detection",
             type=AssetTypes.CUSTOM_MODEL,
