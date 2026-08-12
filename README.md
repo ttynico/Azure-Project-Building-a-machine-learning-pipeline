@@ -155,3 +155,73 @@ enough — an unpinned install resolved to a version that has since dropped
 (not locally) are a recurring Azure ML pain point — the fastest way to debug them is
 Studio → Jobs → [failed run] → [failed step] → Outputs + logs → `user_logs/std_log.txt`,
 which has the real Python traceback that the CLI's `jobs.stream()` output doesn't show.
+
+## Optional: Real-time endpoint deployment
+
+The registered model can also be deployed to a managed online endpoint for
+real-time scoring, in addition to being consumable directly from the
+pipeline's batch outputs.
+
+> **Cost warning**: online endpoints run on an always-on VM and bill
+> hourly regardless of traffic (~$70-140/mo for a small instance). Deploy,
+> test, and delete in the same session — don't leave one running.
+
+```bash
+python setup/deploy_endpoint.py    # stand up the endpoint (several minutes)
+python setup/test_endpoint.py      # send a real NSL-KDD test record, see predictions
+python setup/delete_endpoint.py    # tear down immediately after testing
+```
+
+`deploy_endpoint.py` deploys the latest registered model version to a new
+endpoint with a randomly generated name, saved locally to
+`.last_endpoint_name` so the test/delete scripts don't need it retyped.
+
+### Deployment troubleshooting notes
+
+Getting a working online endpoint took five iterations. In order:
+
+1. **`ModuleNotFoundError: No module named 'pkg_resources'`** — same root
+   cause as the training-step fix above (missing `setuptools`), but this
+   surfaces again here because online endpoints build their own container
+   image from the environment spec, independent of the training image.
+
+2. **`azureml-inference-server-http` missing** — training environments and
+   inference (serving) environments have different requirements. The
+   training `conda.yaml` has no reason to include the inference server
+   package, but a deployment does. Fix: created a separate
+   `environment/conda-inference.yaml` with only what serving needs
+   (scikit-learn, pandas, joblib, azureml-inference-server-http) — no
+   mlflow, no training-only dependencies.
+
+3. **Training base image used for inference** — `mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu22.04`
+   is meant for training/job containers, not serving. Switched to
+   `mcr.microsoft.com/azureml/minimal-ubuntu22.04-py39-cpu-inference:latest`,
+   Microsoft's inference-specific base image, which already has the
+   inference server's dependencies correctly resolved.
+
+4. **Model registered pointing at a single file, not its folder** — the
+   original `Model(path=".../outputs/trained_model/model.pkl")` only
+   pulled `model.pkl` into the registered asset, silently dropping
+   `feature_columns.txt` that `score.py` also needs. Fixed by pointing
+   `path` at the `trained_model` output folder instead of the file inside
+   it, in both `pipeline.py` (for future runs) and via a one-off
+   re-registration for the existing job.
+
+5. **`score.py` assumed a fixed path depth** — once the model folder
+   *was* registered correctly, Azure ML preserved its internal folder
+   structure (`<model_dir>/model_output/model.pkl`), which didn't match
+   `score.py`'s assumption that `model.pkl` sat directly in
+   `AZUREML_MODEL_DIR`. Fixed by walking the model directory to locate
+   the files instead of hardcoding a path depth — more robust to however
+   Azure ML happens to nest the registered asset.
+
+**Lesson**: online endpoint failures fall into two log locations depending
+on *when* the container dies. If it crashes before the liveness probe
+starts, `ml_client.online_deployments.begin_create_or_update(...)` raises
+directly with a short reason (e.g. `BadArgument: User container has
+crashed or terminated`). If it starts but then fails (as in issues 4-5
+above), the SDK error is a generic `502` liveness probe failure with no
+detail — the actual Python traceback only shows up via
+`ml_client.online_deployments.get_logs(name=..., endpoint_name=...)`,
+which should be the first move on any online endpoint failure, not the
+last.
