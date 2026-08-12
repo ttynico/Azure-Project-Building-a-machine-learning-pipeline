@@ -16,14 +16,30 @@ def init():
     global model, feature_columns
 
     model_dir = os.environ["AZUREML_MODEL_DIR"]
-    model_path = os.path.join(model_dir, "model.pkl")
-    columns_path = os.path.join(model_dir, "feature_columns.txt")
+
+    # The registered model asset preserves the training output folder
+    # structure, so the actual files can be nested (e.g.
+    # <model_dir>/model_output/model.pkl) rather than sitting directly in
+    # model_dir. Search for them instead of assuming a fixed depth.
+    model_path = None
+    columns_path = None
+    for root, _, files in os.walk(model_dir):
+        if "model.pkl" in files:
+            model_path = os.path.join(root, "model.pkl")
+        if "feature_columns.txt" in files:
+            columns_path = os.path.join(root, "feature_columns.txt")
+
+    if model_path is None or columns_path is None:
+        raise FileNotFoundError(
+            f"Could not find model.pkl and/or feature_columns.txt under {model_dir}"
+        )
 
     model = joblib.load(model_path)
     with open(columns_path) as f:
         feature_columns = f.read().splitlines()
 
-    print(f"Model loaded. Expecting {len(feature_columns)} features.")
+    print(f"Model loaded from {model_path}. Expecting {len(feature_columns)} features.")
+
 
 def run(raw_data):
     """
