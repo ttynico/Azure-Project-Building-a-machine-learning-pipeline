@@ -1,6 +1,6 @@
 # Azure ML Pipeline — Network Intrusion / Anomaly Detection
 
-**Project 11** — a production-style ML pipeline built with **Azure Machine Learning SDK v2**
+**A production-style ML pipeline built with **Azure Machine Learning SDK v2**
 (`azure-ai-ml`), demonstrating data prep → training → evaluation → conditional model
 registration, orchestrated as a reusable Azure ML pipeline running on an autoscaling
 compute cluster.
